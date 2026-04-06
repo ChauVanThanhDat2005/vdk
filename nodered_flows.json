@@ -4,7 +4,7 @@
     "type": "tab",
     "label": "ESP32 IoT System",
     "disabled": false,
-    "info": "Hệ thống giám sát và điều khiển ESP32 - 2 Nút bấm: Khóa cửa & Điều chỉnh Volume"
+    "info": "Hệ thống giám sát và điều khiển ESP32 - 2 Nút bấm: Chế độ Khóa Servo & Điều chỉnh Volume"
   },
 
 
@@ -36,7 +36,7 @@
     "id": "mqtt_in_btn1",
     "type": "mqtt in",
     "z": "tab_esp32_iot",
-    "name": "Sub: Button 1 (Lock)",
+    "name": "Sub: Button 1 (Lock Mode)",
     "topic": "iot/sensor/btn1",
     "qos": "0",
     "datatype": "utf8",
@@ -93,6 +93,18 @@
     "wires": [["func_led2_state", "ui_text_led2_state"]]
   },
   {
+    "id": "mqtt_in_lock_mode",
+    "type": "mqtt in",
+    "z": "tab_esp32_iot",
+    "name": "Sub: Lock Mode",
+    "topic": "iot/device/lock_mode",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "mqtt_broker_config",
+    "x": 120, "y": 450,
+    "wires": [["func_lock_mode", "ui_text_lock_mode"]]
+  },
+  {
     "id": "mqtt_in_vol_mode",
     "type": "mqtt in",
     "z": "tab_esp32_iot",
@@ -143,7 +155,7 @@
     "type": "function",
     "z": "tab_esp32_iot",
     "name": "Process Button 1",
-    "func": "var state = msg.payload;\nmsg.payload = (state === 'PRESSED') ? '🔴 Đang nhấn' : '🟢 Nhả ra';\nmsg.pressed = (state === 'PRESSED');\nreturn msg;",
+    "func": "var state = msg.payload;\nif (state === 'PRESSED') {\n  msg.payload = '🔴 Đang nhấn';\n  // Tự động quay về ready sau 500ms\n  setTimeout(() => {\n    msg.payload = '🟢 Sẵn sàng';\n  }, 500);\n} else {\n  msg.payload = '🟢 Sẵn sàng';\n}\nreturn msg;",
     "outputs": 1,
     "x": 360, "y": 240,
     "wires": [["ui_text_btn1"]]
@@ -187,6 +199,16 @@
     "outputs": 1,
     "x": 360, "y": 390,
     "wires": [["ui_text_led2_state"]]
+  },
+  {
+    "id": "func_lock_mode",
+    "type": "function",
+    "z": "tab_esp32_iot",
+    "name": "Process Lock Mode",
+    "func": "if (msg.payload === 'ON') {\n  msg.payload = '🔒 KÍCH HOẠT';\n} else {\n  msg.payload = '🔓 TẮT';\n}\nreturn msg;",
+    "outputs": 1,
+    "x": 360, "y": 450,
+    "wires": [["ui_text_lock_mode"]]
   },
   {
     "id": "func_vol_mode",
@@ -233,15 +255,15 @@
     "wires": []
   },
   {
-    "id": "mqtt_out_door_lock",
+    "id": "mqtt_out_lock",
     "type": "mqtt out",
     "z": "tab_esp32_iot",
-    "name": "Pub: Door Lock",
+    "name": "Pub: Lock Control",
     "topic": "iot/control/lock",
     "qos": "1",
     "retain": false,
     "broker": "mqtt_broker_config",
-    "x": 700, "y": 620,
+    "x": 700, "y": 595,
     "wires": []
   },
   {
@@ -370,7 +392,7 @@
     "width": 6,
     "height": 1,
     "name": "Text: Button 1 State",
-    "label": "Nút 1 (Khóa)",
+    "label": "Nút 1 (Lock Mode)",
     "format": "{{msg.payload}}",
     "layout": "row-spread",
     "x": 560, "y": 240,
@@ -415,7 +437,7 @@
     "width": 4,
     "height": 1,
     "name": "Text: LED1 State",
-    "label": "LED1 (Khóa)",
+    "label": "LED1 (Lock)",
     "format": "{{msg.payload}}",
     "layout": "row-spread",
     "x": 560, "y": 360,
@@ -452,6 +474,21 @@
     "wires": []
   },
   {
+    "id": "ui_text_lock_mode",
+    "type": "ui_text",
+    "z": "tab_esp32_iot",
+    "group": "ui_group_status",
+    "order": 2.3,
+    "width": 12,
+    "height": 1,
+    "name": "Text: Lock Mode",
+    "label": "Chế độ Khóa",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "x": 560, "y": 450,
+    "wires": []
+  },
+  {
     "id": "ui_text_device_status",
     "type": "ui_text",
     "z": "tab_esp32_iot",
@@ -466,35 +503,33 @@
     "x": 560, "y": 480,
     "wires": []
   },
-
-
   {
-    "id": "ui_btn_door_lock",
+    "id": "ui_btn_lock",
     "type": "ui_button",
     "z": "tab_esp32_iot",
-    "name": "Btn: Lock Door",
+    "name": "Btn: LOCK",
     "group": "ui_group_control",
-    "order": 1,
+    "order": 2.7,
     "width": 6,
     "height": 1,
     "passthru": false,
-    "label": "🔐 KHÓA CỬA",
+    "label": "🔐 KHÓA",
     "color": "white",
     "bgcolor": "#d32f2f",
     "payload": "LOCK",
     "payloadType": "str",
     "topic": "iot/control/lock",
     "topicType": "str",
-    "x": 480, "y": 560,
-    "wires": [["mqtt_out_door_lock"]]
+    "x": 480, "y": 570,
+    "wires": [["mqtt_out_lock"]]
   },
   {
-    "id": "ui_btn_door_unlock",
+    "id": "ui_btn_unlock",
     "type": "ui_button",
     "z": "tab_esp32_iot",
-    "name": "Btn: Unlock Door",
+    "name": "Btn: UNLOCK",
     "group": "ui_group_control",
-    "order": 2,
+    "order": 2.8,
     "width": 6,
     "height": 1,
     "passthru": false,
@@ -505,23 +540,8 @@
     "payloadType": "str",
     "topic": "iot/control/lock",
     "topicType": "str",
-    "x": 480, "y": 610,
-    "wires": [["mqtt_out_door_lock"]]
-  },
-  {
-    "id": "ui_text_info_btn1",
-    "type": "ui_text",
-    "z": "tab_esp32_iot",
-    "group": "ui_group_control",
-    "order": 2.5,
-    "width": 12,
-    "height": 1,
-    "name": "Text: Button 1 Info",
-    "label": "💡 Hướng dẫn",
-    "format": "Bấm Nút 1 trên ESP32 để Toggle Khóa/Mở Khóa (lần 1: Khóa, lần 2: Mở)",
-    "layout": "row-spread",
-    "x": 560, "y": 560,
-    "wires": []
+    "x": 480, "y": 620,
+    "wires": [["mqtt_out_lock"]]
   },
   {
     "id": "ui_btn_vol_on",
@@ -540,7 +560,7 @@
     "payloadType": "str",
     "topic": "iot/control/vol_mode",
     "topicType": "str",
-    "x": 480, "y": 670,
+    "x": 480, "y": 710,
     "wires": [["mqtt_out_vol_mode"]]
   },
   {
@@ -560,23 +580,48 @@
     "payloadType": "str",
     "topic": "iot/control/vol_mode",
     "topicType": "str",
-    "x": 480, "y": 720,
+    "x": 480, "y": 760,
     "wires": [["mqtt_out_vol_mode"]]
   },
   {
-    "id": "ui_text_info_btn2",
-    "type": "ui_text",
+    "id": "ui_btn_auto_mode",
+    "type": "ui_button",
     "z": "tab_esp32_iot",
+    "name": "Btn: AUTO MODE",
     "group": "ui_group_control",
     "order": 4.5,
     "width": 12,
     "height": 1,
-    "name": "Text: Button 2 Info",
-    "label": "💡 Hướng dẫn",
-    "format": "Bấm Nút 2 trên ESP32 để Toggle Chế độ Volume (Biến trở điều khiển góc Servo)",
-    "layout": "row-spread",
-    "x": 560, "y": 680,
-    "wires": []
+    "passthru": false,
+    "label": "🤖 CHUYỂN VỀ CHẾ ĐỘ TỰ ĐỘNG",
+    "color": "white",
+    "bgcolor": "#0288d1",
+    "payload": "AUTO",
+    "payloadType": "str",
+    "topic": "",
+    "topicType": "str",
+    "x": 480, "y": 810,
+    "wires": [["func_auto_reset_servo"]]
+  },
+  {
+    "id": "func_auto_reset_servo",
+    "type": "function",
+    "z": "tab_esp32_iot",
+    "name": "Auto Mode & Reset Servo",
+    "func": "// Output 0: Send AUTO command\nvar msg1 = {payload: \"AUTO\"};\n\n// Output 1: Send 0 to reset servo immediately  \nvar msg2 = {payload: \"0\"};\n\n// Output 2: Send 0 to reset slider UI after short delay\nvar msg3 = {payload: 0};\nsetTimeout(() => {\n  node.send([null, null, msg3]);\n}, 150);\n\nnode.send([msg1, msg2, null]);\nreturn;",
+    "outputs": 3,
+    "x": 600, "y": 810,
+    "wires": [["mqtt_out_servo"], ["mqtt_out_servo"], ["func_slider_reset"]]
+  },
+  {
+    "id": "func_slider_reset",
+    "type": "function",
+    "z": "tab_esp32_iot",
+    "name": "Update Slider Display",
+    "func": "msg.ui_control = {update: {slider_value: 0}};\nnode.send(msg);\nreturn msg;",
+    "outputs": 1,
+    "x": 750, "y": 810,
+    "wires": [["ui_slider_servo"]]
   },
   {
     "id": "ui_slider_servo",
@@ -594,7 +639,7 @@
     "min": 0,
     "max": 180,
     "step": 1,
-    "x": 480, "y": 800,
+    "x": 480, "y": 860,
     "wires": [["func_servo_format"]]
   },
   {
@@ -623,7 +668,7 @@
     "label": "Tin nhắn LCD (line1|line2)",
     "tooltip": "Dùng | để phân cách 2 dòng. Vd: Hello World|Line 2",
     "color": "",
-    "x": 460, "y": 860,
+    "x": 460, "y": 920,
     "wires": [["mqtt_out_lcd"]]
   },
 

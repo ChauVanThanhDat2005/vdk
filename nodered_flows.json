@@ -30,7 +30,7 @@
     "datatype": "utf8",
     "broker": "mqtt_broker_config",
     "x": 120, "y": 160,
-    "wires": [["func_pot_process", "ui_gauge_pot"]]
+    "wires": [["func_pot_process"]]
   },
   {
     "id": "mqtt_in_btn1",
@@ -360,27 +360,6 @@
     "cutout": 0,
     "colors": ["#1565c0"],
     "x": 560, "y": 140,
-    "wires": []
-  },
-  {
-    "id": "ui_gauge_pot",
-    "type": "ui_gauge",
-    "z": "tab_esp32_iot",
-    "name": "Gauge: Potentiometer",
-    "group": "ui_group_sensors",
-    "order": 3,
-    "width": 6,
-    "height": 4,
-    "gtype": "wave",
-    "title": "Biến trở (%)",
-    "label": "%",
-    "format": "{{value}}%",
-    "min": 0,
-    "max": 100,
-    "colors": ["#0288d1","#0288d1","#0288d1"],
-    "seg1": 33,
-    "seg2": 66,
-    "x": 560, "y": 200,
     "wires": []
   },
   {

@@ -193,20 +193,6 @@ void toggleLockMode() {
     updateLCD("Lock Mode OFF", "");
   }
 }
-// void toggleLockMode() {
-//   lockMode = !lockMode;
-//   if (lockMode) {
-//     digitalWrite(PIN_LED1, HIGH);
-//     mqttClient.publish(TOPIC_LED1_STATE, "ON", true);
-//     Serial.println("[Mode] Bật chế độ khóa servo");
-//     updateLCD("Lock Mode", "ENABLED");
-//   } else {
-//     digitalWrite(PIN_LED1, LOW);
-//     mqttClient.publish(TOPIC_LED1_STATE, "OFF", true);
-//     Serial.println("[Mode] Tắt chế độ khóa servo");
-//     updateLCD("Lock Mode", "DISABLED");
-//   }
-// }
 
 // ──────────────────────────────────────────────────────────────
 // Volume Adjust Mode: Bật/Tắt chế độ điều chỉnh
@@ -248,23 +234,14 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
   if (msg == "AUTO") {
     autoMode = true;
+    setServoAngle(0);  // Reset servo về 0° khi bật auto mode
+    Serial.println("[Servo] AUTO MODE - reset về 0°");
   } else {
     autoMode = false;
     int angle = msg.toInt();
     setServoAngle(angle);
   }
 }
-  // if (topicStr == TOPIC_SERVO_CMD) {
-  //   if (msg == "AUTO") {
-  //     autoMode = true;
-  //     Serial.println("[Servo] Chuyển sang AUTO mode");
-  //   } else {
-  //     autoMode = false;
-  //     int angle = msg.toInt();
-  //     setServoAngle(angle);
-  //     Serial.printf("[Servo] Manual: %d°\n", angle);
-  //   }
-  // }
 
   // ── Chế độ điều chỉnh volume ─────────────────────────
   else if (topicStr == TOPIC_VOL_MODE_CMD) {
@@ -549,6 +526,13 @@ btn1LastReading = reading;
     lastModePublishTime = now;
     mqttClient.publish(TOPIC_LOCK_MODE, lockMode ? "ON" : "OFF", true);
     mqttClient.publish(TOPIC_VOL_MODE, volumeAdjustMode ? "ON" : "OFF", true);
+
+
+
+    mqttClient.publish(TOPIC_DOOR_STATUS, doorStatus.c_str(), true);  // 🔓 Publish trạng thái cửa
+
+
+
   }
 
   // Cập nhật LCD
